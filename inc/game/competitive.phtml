@@ -1,0 +1,159 @@
+<h4>Game Statistics<a class="button tiny right" id="stats-toggle">Toggle Statistics</a></h4>
+<div class="clearfix"></div>
+<div id="stats-graph">
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+<script>
+$(document).ready(function() {
+    $('#container').highcharts({
+    	credits: {
+    		enabled: false
+    	},
+        chart: {
+            type: 'column',
+            backgroundColor:'rgba(255, 255, 255, 0.0)'
+        },
+        title: {
+            text: null,
+            x: -20 //center
+        },
+        xAxis: {
+            categories: ['IB', 'IK', 'IL', 'UB', 'UK', 'UL', 'PB', 'PK', 'PL', 'BB', 'BK', 'BL', 'BC']
+        },
+        yAxis: {
+            title: {
+                text: null
+            },
+            min: 0
+        },
+        plotOptions: {
+            column: {
+                borderWidth: 0
+            }
+        },
+        tooltip: {
+        	formatter: function () {
+        		var label = '';
+        		switch(this.x[0]) {
+        			case 'I': label += 'Infantry '; break;
+        			case 'U': label += 'Units '; break;
+        			case 'P': label += 'Planes '; break;
+        			default: label += 'Buildings ';
+        		}
+
+        		switch(this.x[1]) {
+        			case 'K': label += 'Killed'; break;
+        			case 'B': label += 'Bought'; break;
+        			case 'L': label += 'Left'; break;
+        			default: label += 'Captured';
+        		}
+        		
+        		return '<span style="font-size: 10px;">'+ this.series.name +'</span><br/><span style="color: '+ this.series.color +';">●</span> '+ label +': <strong>'+ this.y +'</strong>';
+        	}
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle',
+            borderWidth: 0,
+            itemStyle: {
+                color: '#a0a0a0'
+            },
+            itemHoverStyle: {
+                color: '#fff'
+            },
+            itemHiddenStyle: {
+                color: '#444'
+            }
+        },
+        series: [
+        <?php
+        	$s = array();
+        	foreach($stats as $k => $v) {
+        		$c = 'rgb(221, 221, 221)';
+        		switch($v->col) {
+        			case 1: $c = '#dee308'; break;
+        			case 2: $c = '#ff1818'; break;
+        			case 3: $c = '#2975e7'; break;
+        			case 4: $c = '#39d329'; break;
+        			case 5: $c = '#ffa218'; break;
+        			case 6: $c = '#31d7e7'; break;
+        			case 7: $c = '#9428bd'; break;
+        			case 8: $c = '#ff9aef'; break;
+        		}
+        		$d = sprintf('%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d',
+        				$v->InfantryBuilt,
+        				$v->InfantryKilled,
+        				$v->InfantryLeft,
+        				$v->UnitsBuilt,
+        				$v->UnitsKilled,
+        				$v->UnitsLeft,
+        				$v->PlanesBuilt,
+        				$v->PlanesKilled,
+        				$v->PlanesLeft,
+        				$v->BuildingsBuilt,
+        				$v->BuildingsKilled,
+        				$v->BuildingsLeft,
+        				$v->BuildingsCaptured
+        		);
+        		$s[] = '{
+        			color: "'. $c.'",
+        			name: "'. $v->name .'",
+        			data: ['. $d.']
+        		}';
+        	}
+        	echo implode(',', $s);
+
+        ?>
+        ]
+    });
+
+    $('#stats-toggle').bind('click', function() {
+        $('#stats-table, #stats-graph').toggle();
+    });
+});
+
+		</script>
+</div>
+
+<div id="stats-table" style="display:none;">
+    <table style="border: 0;">
+    <?php
+    foreach($stats as $k => $row) {
+                $c = 'rgb(221, 221, 221)';
+                switch($row->col) {
+                    case 1: $c = '#dee308'; break;
+                    case 2: $c = '#ff1818'; break;
+                    case 3: $c = '#2975e7'; break;
+                    case 4: $c = '#39d329'; break;
+                    case 5: $c = '#ffa218'; break;
+                    case 6: $c = '#31d7e7'; break;
+                    case 7: $c = '#9428bd'; break;
+                    case 8: $c = '#ff9aef'; break;
+                }
+
+                echo '<tr>
+                            <th style="background-color: ', $c,';">'. $row->name ,'
+                            <th style="background-color: ', $c,';">killed
+                            <th style="background-color: ', $c,';">bought
+                            <th style="background-color: ', $c,';">left
+                            <th style="background-color: ', $c,'">captured
+                    <tr><td>units<td>', $row->UnitsKilled,'<td>', $row->UnitsBuilt, '<td>', $row->UnitsLeft ,'
+                    <tr><td>buildings<td>', $row->BuildingsKilled,'<td>', $row->BuildingsBuilt, '<td>', $row->BuildingsLeft ,'<td>', $row->BuildingsCaptured,'
+                    <tr><td>infantry<td>', $row->InfantryKilled,'<td>', $row->InfantryBuilt, '<td>', $row->InfantryLeft ,'
+                    <tr><td>planes<td>', $row->PlanesKilled,'<td>', $row->PlanesBuilt, '<td>', $row->PlanesLeft;
+            }
+        ?>
+    </table>
+    <style type="text/css">
+        #stats-table table td {
+        border: 0;
+        text-align: right;
+        padding: 3px;
+    }
+
+    #stats-table th {
+        background-color: rgb(221, 221, 221);
+    }
+    </style>
+    </div>

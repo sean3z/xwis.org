@@ -1,0 +1,87 @@
+					<?php
+		
+                    $data = array();
+                    $stats = array();
+                    $query = 'SELECT HOUR(FROM_UNIXTIME(mtime)) as time, DATE(FROM_UNIXTIME(mtime)) as date, COUNT(*) AS games
+                                 FROM   xcl_games
+                                 GROUP BY HOUR(FROM_UNIXTIME(mtime)), DATE(FROM_UNIXTIME(mtime))
+                                 ORDER BY date, time';
+                    if ($result = $mysqli->query($query)) {
+                        while ($row = $result->fetch_object()) {
+                            $stats[] = $row;
+                            $data[] = $row->games;
+                        }
+                        if (count($stats) > 0) $start = explode('-', $stats[0]->date);
+                    }
+                    ?>
+
+<?php if (count($stats) > 0): ?>
+    <h5>Games played on XWIS</h5>
+                    <div id="container"></div>
+<script type="text/javascript">
+$(function () {
+    $('#container').highcharts({
+        chart: {
+            zoomType: 'x',
+            backgroundColor:'rgba(255, 255, 255, 0.0)'
+        },
+        title: {
+            text: null
+        },
+        credits: {
+            enabled: false
+        },
+        subtitle: {
+            text: document.ontouchstart === undefined ?
+                    'Click and drag in the plot area to zoom in' :
+                    'Pinch the chart to zoom in'
+        },
+        xAxis: {
+            type: 'datetime',
+            minRange: 5 * 24 * 3600000 // 5 days
+            // tickInterval: 30 * 24 * 3600000,
+        },
+        yAxis: {
+            title: {
+                text: 'Games Played'
+            },
+            min: 0
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            area: {
+                fillColor: {
+                    linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1},
+                    stops: [
+                        [0, Highcharts.getOptions().colors[0]],
+                        [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                    ]
+                },
+                marker: {
+                    radius: 2
+                },
+                lineWidth: 1,
+                states: {
+                    hover: {
+                        lineWidth: 1
+                    }
+                },
+                threshold: null
+            }
+        },
+
+        series: [{
+            type: 'area',
+            name: 'Games Played',
+            pointInterval: 3600000,
+            pointStart: Date.UTC(<?php echo $start[0],',', $start[1] - 1,',', $start[2], ',', $stats[0]->time; ?>),
+            data: [
+                <?php echo implode(',', $data); ?>
+            ]
+        }]
+    });
+});
+</script>
+<?php endif; ?>
